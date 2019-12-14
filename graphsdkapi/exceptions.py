@@ -1,7 +1,5 @@
-# -*- coding: utf-8 -*-
 import re
-
-from grapheneapi.exceptions import RPCError
+# from grapheneapi.graphenewsrpc import RPCError
 
 
 def decodeRPCErrorMsg(e):
@@ -15,12 +13,15 @@ def decodeRPCErrorMsg(e):
             ".*: (.*)\n"
         ),
         str(e),
-        flags=re.M,
-    )
+        flags=re.M)
     if found:
         return found.group(2).strip()
     else:
         return str(e)
+
+
+class RPCError(Exception):
+    pass
 
 
 class MissingRequiredActiveAuthority(RPCError):
@@ -36,23 +37,4 @@ class UnhandledRPCError(RPCError):
 
 
 class NumRetriesReached(Exception):
-    pass
-
-
-class InvalidEndpointUrl(Exception):
-    pass
-
-
-class AccountCouldntBeFoundException(Exception):
-    pass
-
-
-class InvalidAccountNameException(Exception):
-    pass
-
-
-class UnknownNetworkException(Exception):
-    """ Thrown when we don't recognize the chain id
-    """
-
     pass

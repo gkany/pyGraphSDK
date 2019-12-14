@@ -1,55 +1,24 @@
-# -*- coding: utf-8 -*-
-from graphenecommon.instance import AbstractBlockchainInstanceProvider
+import graphsdk as gph
 
+_shared_graphene_instance = None
 
-class SharedInstance:
-    """ This class merely offers a singelton for the Blockchain Instance
+def shared_graphene_instance():
+    """ This method will initialize ``_shared_graphene_instance`` and return it.
+        The purpose of this method is to have offer single default
+        graphene instance that can be reused by multiple classes.
     """
+    global _shared_graphene_instance
+    if not _shared_graphene_instance:
+        _shared_graphene_instance = gph.Graphene()
+    return _shared_graphene_instance
+    #print("dasd")
 
-    instance = None
-    config = {}
 
+def set_shared_graphene_instance(graphene_instance):
+    """ This method allows us to override default graphene instance for all users of
+        ``_shared_graphene_instance``.
 
-class BlockchainInstance(AbstractBlockchainInstanceProvider):
-    """ This is a class that allows compatibility with previous
-        naming conventions
+        :param graphene.Graphene graphene_instance: Graphene instance
     """
-
-    _sharedInstance = SharedInstance
-
-    def __init__(self, *args, **kwargs):
-        # Also allow 'bitshares_instance'
-        if kwargs.get("bitshares_instance"):
-            kwargs["blockchain_instance"] = kwargs["bitshares_instance"]
-        AbstractBlockchainInstanceProvider.__init__(self, *args, **kwargs)
-
-    def get_instance_class(self):
-        """ Should return the Chain instance class, e.g. `bitshares.BitShares`
-        """
-        import bitshares as bts
-
-        return bts.BitShares
-
-    @property
-    def bitshares(self):
-        """ Alias for the specific blockchain
-        """
-        return self.blockchain
-
-
-def shared_blockchain_instance():
-    return BlockchainInstance().shared_blockchain_instance()
-
-
-def set_shared_blockchain_instance(instance):
-    instance.clear_cache()
-    # instance.set_shared_instance()
-    BlockchainInstance.set_shared_blockchain_instance(instance)
-
-
-def set_shared_config(config):
-    BlockchainInstance.set_shared_config(config)
-
-
-shared_bitshares_instance = shared_blockchain_instance
-set_shared_bitshares_instance = set_shared_blockchain_instance
+    global _shared_graphene_instance
+    _shared_graphene_instance = graphene_instance

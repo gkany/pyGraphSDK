@@ -1,10 +1,10 @@
-# -*- coding: utf-8 -*-
-from graphenebase.signedtransactions import (
-    Signed_Transaction as GrapheneSigned_Transaction,
-)
-
-from .chains import known_chains
+from .basesignedtransactions import Signed_Transaction as GrapheneSigned_Transaction
 from .operations import Operation
+from .chains import known_chains, default_prefix
+import logging
+# from graphsdk.storage import configStorage as config
+# default_prefix = config["default_prefix"]
+log = logging.getLogger(__name__) 
 
 
 class Signed_Transaction(GrapheneSigned_Transaction):
@@ -16,7 +16,17 @@ class Signed_Transaction(GrapheneSigned_Transaction):
         :param str expiration: expiration date
         :param Array operations:  array of operations
     """
+    def __init__(self, *args, **kwargs):
+        super(Signed_Transaction, self).__init__(*args, **kwargs)
 
-    known_chains = known_chains
-    default_prefix = "BTS"
-    operation_klass = Operation
+    def sign(self, wifkeys, chain=default_prefix):
+        return super(Signed_Transaction, self).sign(wifkeys, chain)
+
+    def verify(self, pubkeys=[], chain=default_prefix):
+        return super(Signed_Transaction, self).verify(pubkeys, chain)
+
+    def getOperationKlass(self):
+        return Operation
+
+    def getKnownChains(self):
+        return known_chains

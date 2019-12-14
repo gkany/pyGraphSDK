@@ -1,18 +1,14 @@
-# -*- coding: utf-8 -*-
-from .instance import BlockchainInstance
-from graphenecommon.block import (
-    Block as GrapheneBlock,
-    BlockHeader as GrapheneBlockHeader,
-)
+from graphsdk.instance import shared_graphene_instance
+
+from .exceptions import BlockDoesNotExistsException
+from .utils import parse_time
 
 
-@BlockchainInstance.inject
-class Block(GrapheneBlock):
+class Block(dict):
     """ Read a single block from the chain
 
         :param int block: block number
-        :param bitshares.bitshares.BitShares blockchain_instance: BitShares
-            instance
+        :param graphene.graphene.graphene graphene_instance: graphene instance
         :param bool lazy: Use lazy loading
 
         Instances of this class are dictionaries that come with additional
@@ -21,7 +17,7 @@ class Block(GrapheneBlock):
 
         .. code-block:: python
 
-            from bitshares.block import Block
+            from graphene.block import Block
             block = Block(1)
             print(block)
 
@@ -30,10 +26,43 @@ class Block(GrapheneBlock):
                   refreshed with ``Account.refresh()``.
 
     """
+    def __init__(
+        self,
+        block,
+        graphene_instance=None,
+        lazy=False
+    ):
+        self.graphene = graphene_instance or shared_graphene_instance()
+        self.cached = False
+        self.block = block
 
-    pass
+        if isinstance(block, Block):
+            super(Block, self).__init__(block)
+            self.cached = True
+        elif not lazy:
+            self.refresh()
 
+    def refresh(self):
+        """ Even though blocks never change, you freshly obtain its contents
+            from an API with this method
+        """
+        block = self.graphene.rpc.get_block(self.block)
+        if not block:
+            raise BlockDoesNotExistsException
+        super(Block, self).__init__(block)
+        self.cached = True
 
-@BlockchainInstance.inject
-class BlockHeader(GrapheneBlockHeader):
-    pass
+    def __getitem__(self, key):
+        if not self.cached:
+            self.refresh()
+        return super(Block, self).__getitem__(key)
+
+    def items(self):
+        if not self.cached:
+            self.refresh()
+        return super(Block, self).items()
+
+    def time(self):
+        """ Return a datatime instance for the timestamp of this block
+        """
+        return parse_time(self['timestamp'])

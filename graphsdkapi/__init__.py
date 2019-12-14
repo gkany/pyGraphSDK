@@ -1,1 +1,5 @@
-__all__ = ["bitsharesnoderpc", "exceptions", "websocket"]
+__all__ = [
+    "graphenenoderpc",
+    "exceptions",
+    "websocket",
+]

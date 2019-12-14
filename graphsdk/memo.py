@@ -1,27 +1,17 @@
-# -*- coding: utf-8 -*-
-from graphenecommon.memo import Memo as GrapheneMemo
+from .instance import shared_graphene_instance
+import random
+from graphsdkbase import memo as BtsMemo
 from graphsdkbase.account import PrivateKey, PublicKey
-
 from .account import Account
-from .instance import BlockchainInstance
-from .exceptions import (
-    InvalidMemoKeyException,
-    AccountDoesNotExistsException,
-    WrongMemoKey,
-    InvalidMessageSignature,
-)
+from .exceptions import MissingKeyError
 
 
-@BlockchainInstance.inject
-class Memo(GrapheneMemo):
+class Memo(object):
     """ Deals with Memos that are attached to a transfer
 
-        :param bitshares.account.Account from_account: Account that has sent
-            the memo
-        :param bitshares.account.Account to_account: Account that has received
-            the memo
-        :param bitshares.bitshares.BitShares blockchain_instance: BitShares
-            instance
+        :param graphene.account.Account from_account: Account that has sent the memo
+        :param graphene.account.Account to_account: Account that has received the memo
+        :param graphene.graphene.graphene graphene_instance: graphene instance
 
         A memo is encrypted with a shared secret derived from a private key of
         the sender and a public key of the receiver. Due to the underlying
@@ -31,29 +21,84 @@ class Memo(GrapheneMemo):
 
         .. code-block:: python
 
-            from bitshares.memo import Memo
-            m = Memo("bitshareseu", "wallet.xeroc")
-            m.unlock_wallet("secret")
+            from graphene.memo import Memo
+            m = Memo("grapheneeu", "wallet.xeroc")
             enc = (m.encrypt("foobar"))
             print(enc)
             >> {'nonce': '17329630356955254641', 'message': '8563e2bb2976e0217806d642901a2855'}
             print(m.decrypt(enc))
             >> foobar
 
-        To decrypt a memo, simply use
-
-        .. code-block:: python
-
-            from bitshares.memo import Memo
-            m = Memo()
-            m.blockchain.wallet.unlock("secret")
-            print(memo.decrypt(op_data["memo"]))
-
-        if ``op_data`` being the payload of a transfer operation.
-
     """
+    def __init__(
+        self,
+        from_account,
+        to_account,
+        graphene_instance=None
+    ):
 
-    def define_classes(self):
-        self.account_class = Account
-        self.privatekey_class = PrivateKey
-        self.publickey_class = PublicKey
+        self.graphene = graphene_instance or shared_graphene_instance()
+
+        self.to_account = Account(to_account, graphene_instance=self.graphene)
+        self.from_account = Account(from_account, graphene_instance=self.graphene)
+
+    def encrypt(self, memo):
+        """ Encrypt a memo
+
+            :param str memo: clear text memo message
+            :returns: encrypted memo
+            :rtype: str
+        """
+        if not memo:
+            return None
+
+        nonce = str(random.getrandbits(64))
+        memo_wif = self.graphene.wallet.getPrivateKeyForPublicKey(
+            self.from_account["options"]["memo_key"]
+        )
+        if not memo_wif:
+            raise MissingKeyError("Memo key for %s missing!" % self.from_account["name"])
+
+        enc = BtsMemo.encode_memo(
+            PrivateKey(memo_wif),
+            PublicKey(
+                self.to_account["options"]["memo_key"],
+                prefix=self.graphene.rpc.chain_params["prefix"]
+            ),
+            nonce,
+            memo
+        )
+
+        return {
+            "message": enc,
+            "nonce": nonce,
+            "from": self.from_account["options"]["memo_key"],
+            "to": self.to_account["options"]["memo_key"]
+        }
+
+    def decrypt(self, memo):
+        """ Decrypt a memo
+
+            :param str memo: encrypted memo message
+            :returns: encrypted memo
+            :rtype: str
+        """
+        if not memo:
+            return None
+
+        memo_wif = self.graphene.wallet.getPrivateKeyForPublicKey(
+            self.to_account["options"]["memo_key"]
+        )
+        if not memo_wif:
+            raise MissingKeyError("Memo key for %s missing!" % self.to_account["name"])
+
+        # TODO: Use pubkeys of the message, not pubkeys of account!
+        return BtsMemo.decode_memo(
+            PrivateKey(memo_wif),
+            PublicKey(
+                self.from_account["options"]["memo_key"],
+                prefix=self.graphene.rpc.chain_params["prefix"]
+            ),
+            memo.get("nonce"),
+            memo.get("message")
+        )

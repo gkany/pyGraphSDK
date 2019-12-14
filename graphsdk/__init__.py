@@ -1,9 +1,8 @@
-# -*- coding: utf-8 -*-
-from .bitshares import BitShares
-
+from .graphene import Graphene
 
 __all__ = [
-    "bitshares",
+    "graphene",
+    "aes",
     "account",
     "amount",
     "asset",
@@ -18,5 +17,4 @@ __all__ = [
     "committee",
     "vesting",
     "proposal",
-    "message",
 ]

@@ -1,18 +1,19 @@
-# -*- coding: utf-8 -*-
+default_prefix = "COCOS"
+
 known_chains = {
-    "BTS": {
-        "chain_id": "4018d7844c78f6a6c41c6a552b898022310fc5dec06da467ee7905a8dad512c8",
-        "core_symbol": "BTS",
-        "prefix": "BTS",
+    "prod": {
+        "chain_id": "6057d856c398875cac2650fe33caef3d5f6b403d184c5154abbff526ec1143c4",
+        "core_symbol": "COCOS",
+        "prefix": "COCOS"
     },
-    "CTS": {
-        "chain_id": "53952fc10d52a3af6d572a298e8f99a0a2e7afd0f7dbad354d8d65e8c36c962d",
-        "core_symbol": "CTS",
-        "prefix": "CTS",
+    "testnet": {
+        "chain_id": "1ae3653a3105800f5722c5bda2b55530d0e9e8654314e2f3dc6d2b010da641c5",
+        "core_symbol": "COCOS",
+        "prefix": "COCOS"
     },
-    "TEST": {
-        "chain_id": "39f5e2ede1f8bc1a3a54a7914414e3779e33193f1f5693510e73cb7a87617447",
-        "core_symbol": "TEST",
-        "prefix": "TEST",
-    },
+    "local": {
+        "chain_id": "179db3c6a2e08d610f718f05e9cc2aabad62aff80305b9621b162b8b6f2fd79f",
+        "core_symbol": "COCOS",
+        "prefix": "COCOS"
+    }
 }

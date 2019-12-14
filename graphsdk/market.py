@@ -1,23 +1,21 @@
-# -*- coding: utf-8 -*-
+from .instance import shared_graphene_instance
 from datetime import datetime, timedelta
-
-from graphsdkbase import operations
-
-from .account import Account
-from .amount import Amount
+from .utils import formatTimeFromNow, formatTime, formatTimeString
 from .asset import Asset
-from .instance import BlockchainInstance
-from .price import FilledOrder, Order, Price
-from .utils import assets_from_string, formatTime, formatTimeFromNow
+from .amount import Amount
+from .price import Price, Order, FilledOrder
+from .account import Account
+from .blockchain import Blockchain
+from graphsdkbase import operations
+from graphsdkbase.objects import Operation
 
 
-@BlockchainInstance.inject
 class Market(dict):
     """ This class allows to easily access Markets on the blockchain for trading, etc.
 
-        :param bitshares.bitshares.BitShares blockchain_instance: BitShares instance
-        :param bitshares.asset.Asset base: Base asset
-        :param bitshares.asset.Asset quote: Quote asset
+        :param graphene.graphene.graphene graphene_instance: graphene instance
+        :param graphene.asset.Asset base: Base asset
+        :param graphene.asset.Asset quote: Quote asset
         :returns: Blockchain Market
         :rtype: dictionary with overloaded methods
 
@@ -28,7 +26,7 @@ class Market(dict):
         This class tries to identify **two** assets as provided in the
         parameters in one of the following forms:
 
-        * ``base`` and ``quote`` are valid assets (according to :class:`bitshares.asset.Asset`)
+        * ``base`` and ``quote`` are valid assets (according to :class:`graphene.asset.Asset`)
         * ``base:quote`` separated with ``:``
         * ``base/quote`` separated with ``/``
         * ``base-quote`` separated with ``-``
@@ -37,27 +35,36 @@ class Market(dict):
                   presented first (e.g. ``USD:BTS`` with ``USD`` being the
                   quote), while the ``base`` only refers to a secondary asset
                   for a trade. This means, if you call
-                  :func:`bitshares.market.Market.sell` or
-                  :func:`bitshares.market.Market.buy`, you will sell/buy **only
+                  :func:`graphene.market.Market.sell` or
+                  :func:`graphene.market.Market.buy`, you will sell/buy **only
                   quote** and obtain/pay **only base**.
 
     """
+    market_sep_regex = "[/\-:]"
 
-    def __init__(self, *args, **kwargs):
-        base = kwargs.get("base", None)
-        quote = kwargs.get("quote", None)
+    def __init__(
+        self,
+        *args,
+        base=None,
+        quote=None,
+        graphene_instance=None,
+        **kwargs
+    ):
+        self.graphene = graphene_instance or shared_graphene_instance()
 
         if len(args) == 1 and isinstance(args[0], str):
-            quote_symbol, base_symbol = assets_from_string(args[0])
-            quote = Asset(quote_symbol, blockchain_instance=self.blockchain)
-            base = Asset(base_symbol, blockchain_instance=self.blockchain)
-            dict.__init__(self, {"base": base, "quote": quote})
+            quote_symbol, base_symbol = self._get_assets_from_string(args[0])
+            quote = Asset(quote_symbol, graphene_instance=self.graphene)
+            base = Asset(base_symbol, graphene_instance=self.graphene)
+            super(Market, self).__init__({"base": base, "quote": quote})
         elif len(args) == 0 and base and quote:
-            dict.__init__(self, {"base": base, "quote": quote})
-        elif len(args) == 2 and not base and not quote:
-            dict.__init__(self, {"base": args[1], "quote": args[0]})
+            super(Market, self).__init__({"base": base, "quote": quote})
         else:
             raise ValueError("Unknown Market Format: %s" % str(args))
+
+    def _get_assets_from_string(self, s):
+        import re
+        return re.split(self.market_sep_regex, s)
 
     def get_string(self, separator=":"):
         """ Return a formated string that identifies the market, e.g. ``USD:BTS``
@@ -68,18 +75,18 @@ class Market(dict):
 
     def __eq__(self, other):
         if isinstance(other, str):
-            quote_symbol, base_symbol = assets_from_string(other)
+            quote_symbol, base_symbol = self._get_assets_from_string(other)
             return (
-                self["quote"]["symbol"] == quote_symbol
-                and self["base"]["symbol"] == base_symbol
+                self["quote"]["symbol"] == quote_symbol and
+                self["base"]["symbol"] == base_symbol
             ) or (
-                self["quote"]["symbol"] == base_symbol
-                and self["base"]["symbol"] == quote_symbol
+                self["quote"]["symbol"] == base_symbol and
+                self["base"]["symbol"] == quote_symbol
             )
         elif isinstance(other, Market):
             return (
-                self["quote"]["symbol"] == other["quote"]["symbol"]
-                and self["base"]["symbol"] == other["base"]["symbol"]
+                self["quote"]["symbol"] == other["quote"]["symbol"] and
+                self["base"]["symbol"] == other["base"]["symbol"]
             )
 
     def ticker(self):
@@ -116,67 +123,61 @@ class Market(dict):
         """
         data = {}
         # Core Exchange rate
-        if self["quote"]["id"] == "1.3.0":
-            cer = self["base"]["options"]["core_exchange_rate"]
-        else:
-            cer = self["quote"]["options"]["core_exchange_rate"]
-        data["core_exchange_rate"] = Price(cer, blockchain_instance=self.blockchain)
+        cer = self["quote"]["options"]["core_exchange_rate"]
+        data["core_exchange_rate"] = Price(
+            cer,
+            graphene_instance=self.graphene
+        )
         if cer["base"]["asset_id"] == self["quote"]["id"]:
             data["core_exchange_rate"] = data["core_exchange_rate"].invert()
 
         # smartcoin stuff
         if "bitasset_data_id" in self["quote"]:
-            bitasset = self.blockchain.rpc.get_object(self["quote"]["bitasset_data_id"])
+            bitasset = self.graphene.rpc.get_object(self["quote"]["bitasset_data_id"])
             backing_asset_id = bitasset["options"]["short_backing_asset"]
             if backing_asset_id == self["base"]["id"]:
                 sp = bitasset["current_feed"]["settlement_price"]
                 data["quoteSettlement_price"] = Price(
-                    sp, blockchain_instance=self.blockchain
+                    sp,
+                    graphene_instance=self.graphene
                 )
                 if sp["base"]["asset_id"] == self["quote"]["id"]:
-                    data["quoteSettlement_price"] = data[
-                        "quoteSettlement_price"
-                    ].invert()
+                    data["quoteSettlement_price"] = data["quoteSettlement_price"].invert()
 
         elif "bitasset_data_id" in self["base"]:
-            bitasset = self.blockchain.rpc.get_object(self["base"]["bitasset_data_id"])
+            bitasset = self.graphene.rpc.get_object(self["base"]["bitasset_data_id"])
             backing_asset_id = bitasset["options"]["short_backing_asset"]
             if backing_asset_id == self["quote"]["id"]:
                 data["baseSettlement_price"] = Price(
                     bitasset["current_feed"]["settlement_price"],
-                    blockchain_instance=self.blockchain,
+                    graphene_instance=self.graphene
                 )
 
-        ticker = self.blockchain.rpc.get_ticker(self["base"]["id"], self["quote"]["id"])
-        data["baseVolume"] = Amount(
-            ticker["base_volume"] or 0.0,
-            self["base"],
-            blockchain_instance=self.blockchain,
+        ticker = self.graphene.rpc.get_ticker(
+            self["base"]["id"],
+            self["quote"]["id"],
         )
-        data["quoteVolume"] = Amount(
-            ticker["quote_volume"] or 0.0,
-            self["quote"],
-            blockchain_instance=self.blockchain,
-        )
+        data["baseVolume"] = Amount(ticker["base_volume"], self["base"], graphene_instance=self.graphene)
+        data["quoteVolume"] = Amount(ticker["quote_volume"], self["quote"], graphene_instance=self.graphene)
         data["lowestAsk"] = Price(
-            ticker["lowest_ask"] or 0.0,
+            ticker["lowest_ask"],
             base=self["base"],
             quote=self["quote"],
-            blockchain_instance=self.blockchain,
+            graphene_instance=self.graphene
         )
         data["highestBid"] = Price(
-            ticker["highest_bid"] or 0.0,
+            ticker["highest_bid"],
             base=self["base"],
             quote=self["quote"],
-            blockchain_instance=self.blockchain,
+            graphene_instance=self.graphene
         )
         data["latest"] = Price(
-            ticker["latest"] or 0.0,
+            ticker["latest"],
             quote=self["quote"],
             base=self["base"],
-            blockchain_instance=self.blockchain,
+            graphene_instance=self.graphene
         )
-        data["percentChange"] = float(ticker.get("percent_change", 0.0) or 0.0)
+        data["percentChange"] = float(ticker["percent_change"])
 
         return data
 
@@ -193,18 +194,13 @@ class Market(dict):
                 }
 
         """
-        volume = self.blockchain.rpc.get_24_volume(
-            self["base"]["id"], self["quote"]["id"]
+        volume = self.graphene.rpc.get_24_volume(
+            self["base"]["id"],
+            self["quote"]["id"],
         )
         return {
-            self["base"]["symbol"]: Amount(
-                volume["base_volume"], self["base"], blockchain_instance=self.blockchain
-            ),
-            self["quote"]["symbol"]: Amount(
-                volume["quote_volume"],
-                self["quote"],
-                blockchain_instance=self.blockchain,
-            ),
+            self["base"]["symbol"]: Amount(volume["base_volume"], self["base"], graphene_instance=self.graphene),
+            self["quote"]["symbol"]: Amount(volume["quote_volume"], self["quote"], graphene_instance=self.graphene)
         }
 
     def orderbook(self, limit=25):
@@ -230,85 +226,28 @@ class Market(dict):
 
 
             .. note:: Each bid is an instance of
-                class:`bitshares.price.Order` and thus carries the keys
+                class:`graphene.price.Order` and thus carries the keys
                 ``base``, ``quote`` and ``price``. From those you can
                 obtain the actual amounts for sale
 
-            .. note:: This method does order consolidation and hides some
-                details of individual orders!
-
         """
-        orders = self.blockchain.rpc.get_order_book(
-            self["base"]["id"], self["quote"]["id"], limit
+        orders = self.graphene.rpc.get_order_book(
+            self["base"]["id"],
+            self["quote"]["id"],
+            limit
         )
-        asks = list(
-            map(
-                lambda x: Order(
-                    float(x["price"]),
-                    quote=Amount(
-                        x["quote"], self["quote"], blockchain_instance=self.blockchain
-                    ),
-                    base=Amount(
-                        x["base"], self["base"], blockchain_instance=self.blockchain
-                    ),
-                    blockchain_instance=self.blockchain,
-                ),
-                orders["asks"],
-            )
-        )
-        bids = list(
-            map(
-                lambda x: Order(
-                    float(x["price"]),
-                    quote=Amount(
-                        x["quote"], self["quote"], blockchain_instance=self.blockchain
-                    ),
-                    base=Amount(
-                        x["base"], self["base"], blockchain_instance=self.blockchain
-                    ),
-                    blockchain_instance=self.blockchain,
-                ),
-                orders["bids"],
-            )
-        )
+        asks = list(map(lambda x: Order(
+            Amount(x["quote"], self["quote"], graphene_instance=self.graphene),
+            Amount(x["base"], self["base"], graphene_instance=self.graphene),
+            graphene_instance=self.graphene
+        ), orders["asks"]))
+        bids = list(map(lambda x: Order(
+            Amount(x["quote"], self["quote"], graphene_instance=self.graphene),
+            Amount(x["base"], self["base"], graphene_instance=self.graphene),
+            graphene_instance=self.graphene
+        ), orders["bids"]))
         data = {"asks": asks, "bids": bids}
         return data
-
-    def get_limit_orders(self, limit=25):
-        """ Returns the list of limit orders for a given market.
-
-            :param int limit: Limit the amount of orders (default: 25)
-
-            Sample output:
-
-            .. code-block:: js
-
-                {'bids': [0.003679 USD/BTS (1.9103 USD|519.29602 BTS),
-                0.003676 USD/BTS (299.9997 USD|81606.16394 BTS),
-                0.003665 USD/BTS (288.4618 USD|78706.21881 BTS),
-                0.003665 USD/BTS (3.5285 USD|962.74409 BTS),
-                0.003665 USD/BTS (72.5474 USD|19794.41299 BTS)],
-                'asks': [0.003738 USD/BTS (36.4715 USD|9756.17339 BTS),
-                0.003738 USD/BTS (18.6915 USD|5000.00000 BTS),
-                0.003742 USD/BTS (182.6881 USD|48820.22081 BTS),
-                0.003772 USD/BTS (4.5200 USD|1198.14798 BTS),
-                0.003799 USD/BTS (148.4975 USD|39086.59741 BTS)]}
-
-
-            .. note:: Each bid is an instance of
-                class:`bitshares.price.Order` and thus carries the keys
-                ``base``, ``quote`` and ``price``. From those you can
-                obtain the actual amounts for sale
-
-        """
-        return list(
-            map(
-                lambda x: Order(x, blockchain_instance=self.blockchain),
-                self.blockchain.rpc.get_limit_orders(
-                    self["base"]["id"], self["quote"]["id"], limit
-                ),
-            )
-        )
 
     def trades(self, limit=25, start=None, stop=None):
         """ Returns your trade history for a given market.
@@ -324,55 +263,20 @@ class Market(dict):
             stop = datetime.now()
         if not start:
             start = stop - timedelta(hours=24)
-        """
-            vector<market_trade> get_trade_history( const string& base, const string& quote, fc::time_point_sec start, fc::time_point_sec stop, unsigned limit = 100 )const;
-        """
-        sequence = None
-
-        cnt = 0
-        while True:
-            first_run = min(limit, 100)
-            if not sequence:
-                # Obtain first set of orders
-                orders = self.blockchain.rpc.get_trade_history(
-                    self["base"]["symbol"],
-                    self["quote"]["symbol"],
-                    formatTime(stop),
-                    formatTime(start),
-                    first_run,
-                )
-            else:
-                # obtain subsequent set of orders
-                continuous_limit = min(limit - cnt, 100)
-                orders = self.blockchain.rpc.get_trade_history_by_sequence(
-                    self["base"]["symbol"],
-                    self["quote"]["symbol"],
-                    sequence,
-                    formatTime(start),
-                    continuous_limit,
-                )
-
-            if len(orders) == 0:
-                return
-            for order in orders:
-                cnt += 1
-                yield FilledOrder(
-                    order,
-                    quote=Amount(
-                        order["amount"],
-                        self["quote"],
-                        blockchain_instance=self.blockchain,
-                    ),
-                    base=Amount(
-                        float(order["amount"]) * float(order["price"]),
-                        self["base"],
-                        blockchain_instance=self.blockchain,
-                    ),
-                    blockchain_instance=self.blockchain,
-                )
-                if cnt >= limit:
-                    return
-                sequence = order.get("sequence")
+        orders = self.graphene.rpc.get_trade_history(
+            self["base"]["symbol"],
+            self["quote"]["symbol"],
+            formatTime(stop),
+            formatTime(start),
+            limit)
+        return list(map(
+            lambda x: FilledOrder(
+                x,
+                quote=Amount(x["amount"], self["quote"], graphene_instance=self.graphene),
+                base=Amount(float(x["amount"]) * float(x["price"]), self["base"], graphene_instance=self.graphene),
+                graphene_instance=self.graphene
+            ), orders
+        ))
 
     def accounttrades(self, account=None, limit=25):
         """ Returns your trade history for a given market, specified by
@@ -396,14 +300,17 @@ class Market(dict):
 
         """
         if not account:
-            if "default_account" in self.blockchain.config:
-                account = self.blockchain.config["default_account"]
+            if "default_account" in self.graphene.config:
+                account = self.graphene.config["default_account"]
         if not account:
             raise ValueError("You need to provide an account")
-        account = Account(account, blockchain_instance=self.blockchain)
+        account = Account(account, graphene_instance=self.graphene)
 
-        filled = self.blockchain.rpc.get_fill_order_history(
-            self["base"]["id"], self["quote"]["id"], 2 * limit, api="history"
+        filled = self.graphene.rpc.get_fill_order_history(
+            self["base"]["id"],
+            self["quote"]["id"],
+            2 * limit,
+            api="history"
         )
         trades = []
         for f in filled:
@@ -413,35 +320,36 @@ class Market(dict):
                         f,
                         base=self["base"],
                         quote=self["quote"],
-                        blockchain_instance=self.blockchain,
-                    )
-                )
+                        graphene_instance=self.graphene
+                    ))
         return trades
 
     def accountopenorders(self, account=None):
         """ Returns open Orders
 
-            :param bitshares.account.Account account: Account name or instance of Account to show orders for in this market
+            :param graphene.account.Account account: Account name or instance of Account to show orders for in this market
         """
         if not account:
-            if "default_account" in self.blockchain.config:
-                account = self.blockchain.config["default_account"]
+            if "default_account" in self.graphene.config:
+                account = self.graphene.config["default_account"]
         if not account:
             raise ValueError("You need to provide an account")
-        account = Account(account, full=True, blockchain_instance=self.blockchain)
+        account = Account(account, full=True, graphene_instance=self.graphene)
 
         r = []
-        account.refresh()
         orders = account["limit_orders"]
         for o in orders:
-            if (
-                o["sell_price"]["base"]["asset_id"] == self["base"]["id"]
-                and o["sell_price"]["quote"]["asset_id"] == self["quote"]["id"]
+            if ((
+                o["sell_price"]["base"]["asset_id"] == self["base"]["id"] and
+                o["sell_price"]["quote"]["asset_id"] == self["quote"]["id"]
             ) or (
-                o["sell_price"]["base"]["asset_id"] == self["quote"]["id"]
-                and o["sell_price"]["quote"]["asset_id"] == self["base"]["id"]
-            ):
-                r.append(Order(o, blockchain_instance=self.blockchain))
+                o["sell_price"]["base"]["asset_id"] == self["quote"]["id"] and
+                o["sell_price"]["quote"]["asset_id"] == self["base"]["id"]
+            )):
+                r.append(Order(
+                    o,
+                    graphene_instance=self.graphene
+                ))
         return r
 
     def buy(
@@ -451,8 +359,7 @@ class Market(dict):
         expiration=None,
         killfill=False,
         account=None,
-        returnOrderId=False,
-        **kwargs
+        returnOrderId=False
     ):
         """ Places a buy order in a given market
 
@@ -489,64 +396,58 @@ class Market(dict):
                     * If an order on the market exists that sells USD for cheaper, you will end up with more than 10 USD
         """
         if not expiration:
-            expiration = (
-                self.blockchain.config["order-expiration"] or 60 * 60 * 24 * 365
-            )
+            expiration = self.graphene.config["order-expiration"]
         if not account:
-            if "default_account" in self.blockchain.config:
-                account = self.blockchain.config["default_account"]
+            if "default_account" in self.graphene.config:
+                account = self.graphene.config["default_account"]
         if not account:
             raise ValueError("You need to provide an account")
-        account = Account(account, blockchain_instance=self.blockchain)
-
+        account = Account(account, graphene_instance=self.graphene)
         if isinstance(price, Price):
-            price = price.as_base(self["base"]["symbol"])
+            if (
+                price["quote"]["symbol"] == self["quote"]["symbol"] and
+                price["base"]["symbol"] == self["base"]["symbol"]
+            ):
+                pass
+            elif (
+                price["base"]["symbol"] == self["quote"]["symbol"] and
+                price["quote"]["symbol"] == self["base"]["symbol"]
+            ):
+                price = price.invert()
+            else:
+                raise ValueError("The assets in the price do not match the market!")
 
         if isinstance(amount, Amount):
-            amount = Amount(amount, blockchain_instance=self.blockchain)
-            assert (
-                amount["asset"]["symbol"] == self["quote"]["symbol"]
-            ), "Price: {} does not match amount: {}".format(str(price), str(amount))
+            amount = Amount(amount, graphene_instance=self.graphene)
+            assert(amount["asset"]["symbol"] == self["quote"]["symbol"])
         else:
-            amount = Amount(
-                amount, self["quote"]["symbol"], blockchain_instance=self.blockchain
-            )
+            amount = Amount(amount, self["quote"]["symbol"], graphene_instance=self.graphene)
 
-        order = operations.Limit_order_create(
-            **{
-                "fee": {"amount": 0, "asset_id": "1.3.0"},
-                "seller": account["id"],
-                "amount_to_sell": {
-                    "amount": int(
-                        round(
-                            float(amount)
-                            * float(price)
-                            * 10 ** self["base"]["precision"]
-                        )
-                    ),
-                    "asset_id": self["base"]["id"],
-                },
-                "min_to_receive": {
-                    "amount": int(
-                        round(float(amount) * 10 ** self["quote"]["precision"])
-                    ),
-                    "asset_id": self["quote"]["id"],
-                },
-                "expiration": formatTimeFromNow(expiration),
-                "fill_or_kill": killfill,
-            }
-        )
+        order = operations.Limit_order_create(**{
+            "fee": {"amount": 0, "asset_id": "1.3.0"},
+            "seller": account["id"],
+            "amount_to_sell": {
+                "amount": int(float(amount) * float(price) * 10 ** self["base"]["precision"]),
+                "asset_id": self["base"]["id"]
+            },
+            "min_to_receive": {
+                "amount": int(float(amount) * 10 ** self["quote"]["precision"]),
+                "asset_id": self["quote"]["id"]
+            },
+            "expiration": formatTimeFromNow(expiration),
+            "fill_or_kill": killfill,
+        })
 
         if returnOrderId:
             # Make blocking broadcasts
-            prevblocking = self.blockchain.blocking
-            self.blockchain.blocking = returnOrderId
+            prevblocking = self.graphene.blocking
+            self.graphene.blocking = returnOrderId
 
-        tx = self.blockchain.finalizeOp(order, account["name"], "active", **kwargs)
+        tx = self.graphene.finalizeOp(order, account["name"], "active")
 
-        if returnOrderId and tx.get("operation_results"):
+        if returnOrderId:
             tx["orderid"] = tx["operation_results"][0][1]
-            self.blockchain.blocking = prevblocking
+            self.graphene.blocking = prevblocking
 
         return tx
 
@@ -557,8 +458,7 @@ class Market(dict):
         expiration=None,
         killfill=False,
         account=None,
-        returnOrderId=False,
-        **kwargs
+        returnOrderId=False
     ):
         """ Places a sell order in a given market
 
@@ -583,71 +483,66 @@ class Market(dict):
                 That way you can multiply prices with `1.05` to get a +5%.
         """
         if not expiration:
-            expiration = self.blockchain.config["order-expiration"]
+            expiration = self.graphene.config["order-expiration"]
         if not account:
-            if "default_account" in self.blockchain.config:
-                account = self.blockchain.config["default_account"]
+            if "default_account" in self.graphene.config:
+                account = self.graphene.config["default_account"]
         if not account:
             raise ValueError("You need to provide an account")
-        account = Account(account, blockchain_instance=self.blockchain)
+        account = Account(account, graphene_instance=self.graphene)
         if isinstance(price, Price):
-            price = price.as_base(self["base"]["symbol"])
+            if (
+                price["quote"]["symbol"] == self["quote"]["symbol"] and
+                price["base"]["symbol"] == self["base"]["symbol"]
+            ):
+                pass
+            elif (
+                price["base"]["symbol"] == self["quote"]["symbol"] and
+                price["quote"]["symbol"] == self["base"]["symbol"]
+            ):
+                price = price.invert()
+            else:
+                raise ValueError("The assets in the price do not match the market!")
 
         if isinstance(amount, Amount):
-            amount = Amount(amount, blockchain_instance=self.blockchain)
-            assert (
-                amount["asset"]["symbol"] == self["quote"]["symbol"]
-            ), "Price: {} does not match amount: {}".format(str(price), str(amount))
+            amount = Amount(amount, graphene_instance=self.graphene)
+            assert(amount["asset"]["symbol"] == self["quote"]["symbol"])
         else:
-            amount = Amount(
-                amount, self["quote"]["symbol"], blockchain_instance=self.blockchain
-            )
+            amount = Amount(amount, self["quote"]["symbol"], graphene_instance=self.graphene)
 
-        order = operations.Limit_order_create(
-            **{
-                "fee": {"amount": 0, "asset_id": "1.3.0"},
-                "seller": account["id"],
-                "amount_to_sell": {
-                    "amount": int(
-                        round(float(amount) * 10 ** self["quote"]["precision"])
-                    ),
-                    "asset_id": self["quote"]["id"],
-                },
-                "min_to_receive": {
-                    "amount": int(
-                        round(
-                            float(amount)
-                            * float(price)
-                            * 10 ** self["base"]["precision"]
-                        )
-                    ),
-                    "asset_id": self["base"]["id"],
-                },
-                "expiration": formatTimeFromNow(expiration),
-                "fill_or_kill": killfill,
-            }
-        )
+        order = operations.Limit_order_create(**{
+            "fee": {"amount": 0, "asset_id": "1.3.0"},
+            "seller": account["id"],
+            "amount_to_sell": {
+                "amount": int(float(amount) * 10 ** self["quote"]["precision"]),
+                "asset_id": self["quote"]["id"]
+            },
+            "min_to_receive": {
+                "amount": int(float(amount) * float(price) * 10 ** self["base"]["precision"]),
+                "asset_id": self["base"]["id"]
+            },
+            "expiration": formatTimeFromNow(expiration),
+            "fill_or_kill": killfill,
+        })
         if returnOrderId:
             # Make blocking broadcasts
-            prevblocking = self.blockchain.blocking
-            self.blockchain.blocking = returnOrderId
+            prevblocking = self.graphene.blocking
+            self.graphene.blocking = returnOrderId
 
-        tx = self.blockchain.finalizeOp(order, account["name"], "active", **kwargs)
+        tx = self.graphene.finalizeOp(order, account["name"], "active")
 
         if returnOrderId:
             tx["orderid"] = tx["operation_results"][0][1]
-            self.blockchain.blocking = prevblocking
+            self.graphene.blocking = prevblocking
 
-        return tx
-
-    def cancel(self, orderNumber, account=None, **kwargs):
+    def cancel(self, orderNumber, account=None):
         """ Cancels an order you have placed in a given market. Requires
             only the "orderNumber". An order number takes the form
             ``1.7.xxx``.
 
             :param str orderNumber: The Order Object ide of the form ``1.7.xxxx``
         """
-        return self.blockchain.cancel(orderNumber, account=account, **kwargs)
+        return self.graphene.cancel(orderNumber, account=account)
 
     def core_quote_market(self):
         """ This returns an instance of the market that has the core market of the quote asset.
@@ -658,10 +553,7 @@ class Market(dict):
             raise ValueError("Quote (%s) is not a bitasset!" % self["quote"]["symbol"])
         self["quote"].full = True
         self["quote"].refresh()
-        collateral = Asset(
-            self["quote"]["bitasset_data"]["options"]["short_backing_asset"],
-            blockchain_instance=self.blockchain,
-        )
+        collateral = Asset(self["quote"]["bitasset_data"]["options"]["short_backing_asset"])
         return Market(quote=self["quote"], base=collateral)
 
     def core_base_market(self):
@@ -673,8 +565,5 @@ class Market(dict):
             raise ValueError("base (%s) is not a bitasset!" % self["base"]["symbol"])
         self["base"].full = True
         self["base"].refresh()
-        collateral = Asset(
-            self["base"]["bitasset_data"]["options"]["short_backing_asset"],
-            blockchain_instance=self.blockchain,
-        )
+        collateral = Asset(self["base"]["bitasset_data"]["options"]["short_backing_asset"])
         return Market(quote=self["base"], base=collateral)
