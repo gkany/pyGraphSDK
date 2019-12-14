@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from graphenecommon.message import Message as GrapheneMessage, InvalidMessageSignature
-from bitsharesbase.account import PublicKey
+from graphsdkbase.account import PublicKey
 
 from .account import Account
 from .instance import BlockchainInstance

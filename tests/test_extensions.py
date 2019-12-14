@@ -1,7 +1,7 @@
 import unittest
 from pprint import pprint
 
-from bitsharesbase.objects import CallOrderExtension, AccountCreateExtensions
+from graphsdkbase.objects import CallOrderExtension, AccountCreateExtensions
 
 from .fixtures import fixture_data, bitshares, wif
 

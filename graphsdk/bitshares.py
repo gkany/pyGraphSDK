@@ -5,10 +5,10 @@ from datetime import datetime, timedelta
 
 from graphenecommon.chain import AbstractGrapheneChain
 
-from bitsharesapi.bitsharesnoderpc import BitSharesNodeRPC
-from bitsharesbase import operations
-from bitsharesbase.account import PublicKey
-from bitsharesbase.asset_permissions import asset_permissions, toint
+from graphsdkapi.bitsharesnoderpc import BitSharesNodeRPC
+from graphsdkbase import operations
+from graphsdkbase.account import PublicKey
+from graphsdkbase.asset_permissions import asset_permissions, toint
 
 from .account import Account
 from .amount import Amount
@@ -196,7 +196,7 @@ class BitShares(AbstractGrapheneChain):
         """ Create new account on BitShares
 
             The brainkey/password can be used to recover all generated keys
-            (see `bitsharesbase.account` for more details.
+            (see `graphsdkbase.account` for more details.
 
             By default, this call will use ``default_account`` to
             register a new name ``account_name`` with all keys being
@@ -257,7 +257,7 @@ class BitShares(AbstractGrapheneChain):
         registrar = Account(registrar, blockchain_instance=self)
 
         " Generate new keys from password"
-        from bitsharesbase.account import PasswordKey, PublicKey
+        from graphsdkbase.account import PasswordKey, PublicKey
 
         owner_key_authority = []
         active_key_authority = []
@@ -1322,7 +1322,7 @@ class BitShares(AbstractGrapheneChain):
             :param str account: (optional) the account to allow access
                 to (defaults to ``default_account``)
         """
-        from bitsharesbase.transactions import timeformat
+        from graphsdkbase.transactions import timeformat
 
         assert isinstance(daily_pay, Amount)
         assert daily_pay["asset"]["id"] == "1.3.0"

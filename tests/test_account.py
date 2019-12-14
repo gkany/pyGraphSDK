@@ -8,7 +8,7 @@ from bitshares.amount import Amount
 from bitshares.asset import Asset
 from bitshares.price import Order
 from bitshares.instance import set_shared_bitshares_instance
-from bitsharesbase.operationids import getOperationNameForId
+from graphsdkbase.operationids import getOperationNameForId
 from .fixtures import fixture_data, bitshares
 
 
@@ -68,7 +68,7 @@ class Testcases(unittest.TestCase):
         self.assertIsInstance(account.callpositions, dict)
 
     def test_whitelist(self):
-        from bitsharesbase.operations import Account_whitelist
+        from graphsdkbase.operations import Account_whitelist
 
         account = Account("init0")
         tx = account.whitelist("committee-account")
@@ -80,7 +80,7 @@ class Testcases(unittest.TestCase):
         )
 
     def test_blacklist(self):
-        from bitsharesbase.operations import Account_whitelist
+        from graphsdkbase.operations import Account_whitelist
 
         account = Account("init0")
         tx = account.blacklist("committee-account")
@@ -92,7 +92,7 @@ class Testcases(unittest.TestCase):
         )
 
     def test_unlist(self):
-        from bitsharesbase.operations import Account_whitelist
+        from graphsdkbase.operations import Account_whitelist
 
         account = Account("init0")
         tx = account.nolist("committee-account")

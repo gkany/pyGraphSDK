@@ -4,10 +4,10 @@ from graphenecommon.transactionbuilder import (
     ProposalBuilder as GrapheneProposalBuilder,
 )
 
-from bitsharesbase import operations, transactions
-from bitsharesbase.account import PrivateKey, PublicKey
-from bitsharesbase.objects import Operation
-from bitsharesbase.signedtransactions import Signed_Transaction
+from graphsdkbase import operations, transactions
+from graphsdkbase.account import PrivateKey, PublicKey
+from graphsdkbase.objects import Operation
+from graphsdkbase.signedtransactions import Signed_Transaction
 
 from .amount import Amount
 from .asset import Asset

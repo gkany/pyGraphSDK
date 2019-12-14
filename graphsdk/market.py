@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime, timedelta
 
-from bitsharesbase import operations
+from graphsdkbase import operations
 
 from .account import Account
 from .amount import Amount

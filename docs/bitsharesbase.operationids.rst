@@ -1,7 +1,7 @@
-bitsharesbase.operationids module
+graphsdkbase.operationids module
 =================================
 
-.. automodule:: bitsharesbase.operationids
+.. automodule:: graphsdkbase.operationids
    :members:
    :undoc-members:
    :show-inheritance:

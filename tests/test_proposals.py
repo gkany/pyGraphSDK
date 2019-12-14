@@ -1,7 +1,7 @@
 import unittest
 from pprint import pprint
 from bitshares import BitShares
-from bitsharesbase.operationids import getOperationNameForId
+from graphsdkbase.operationids import getOperationNameForId
 from bitshares.instance import set_shared_bitshares_instance
 from .fixtures import fixture_data, bitshares
 

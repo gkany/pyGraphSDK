@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # from .storage import config
-from bitsharesbase import operations
+from graphsdkbase import operations
 
 from .account import Account
 from .amount import Amount
@@ -44,7 +44,7 @@ class Dex(BlockchainInstance):
                 'committee_member_create': {'fee': 100000000.0}}
 
         """
-        from bitsharesbase.operations import operations
+        from graphsdkbase.operations import operations
 
         r = {}
         obj, base = self.blockchain.rpc.get_objects(["2.0.0", "1.3.0"])

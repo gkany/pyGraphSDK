@@ -1,7 +1,7 @@
-bitsharesbase.signedtransactions module
+graphsdkbase.signedtransactions module
 =======================================
 
-.. automodule:: bitsharesbase.signedtransactions
+.. automodule:: graphsdkbase.signedtransactions
    :members:
    :undoc-members:
    :show-inheritance:

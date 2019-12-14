@@ -5,7 +5,7 @@ from graphenecommon.account import (
     Account as GrapheneAccount,
     AccountUpdate as GrapheneAccountUpdate,
 )
-from bitsharesbase import operations
+from graphsdkbase import operations
 
 
 @BlockchainInstance.inject

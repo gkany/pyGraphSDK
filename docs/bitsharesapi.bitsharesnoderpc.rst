@@ -1,7 +1,7 @@
-bitsharesapi.bitsharesnoderpc module
+graphsdkapi.bitsharesnoderpc module
 ====================================
 
-.. automodule:: bitsharesapi.bitsharesnoderpc
+.. automodule:: graphsdkapi.bitsharesnoderpc
    :members:
    :undoc-members:
    :show-inheritance:

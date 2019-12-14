@@ -143,7 +143,7 @@ Testing:
 Features:
 ---------
 
-* Add custom operation to bitsharesbase
+* Add custom operation to graphsdkbase
 
 Fixes:
 ------

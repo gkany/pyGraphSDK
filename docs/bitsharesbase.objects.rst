@@ -1,7 +1,7 @@
-bitsharesbase.objects module
+graphsdkbase.objects module
 ============================
 
-.. automodule:: bitsharesbase.objects
+.. automodule:: graphsdkbase.objects
    :members:
    :undoc-members:
    :show-inheritance:

@@ -40,7 +40,7 @@ class Operation(GrapheneOperation):
         bitshares
     """
 
-    module = "bitsharesbase.operations"
+    module = "graphsdkbase.operations"
     operations = operations
 
 

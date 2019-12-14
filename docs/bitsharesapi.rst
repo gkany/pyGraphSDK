@@ -1,4 +1,4 @@
-bitsharesapi package
+graphsdkapi package
 ====================
 
 Submodules
@@ -6,14 +6,14 @@ Submodules
 
 .. toctree::
 
-   bitsharesapi.bitsharesnoderpc
-   bitsharesapi.exceptions
-   bitsharesapi.websocket
+   graphsdkapi.bitsharesnoderpc
+   graphsdkapi.exceptions
+   graphsdkapi.websocket
 
 Module contents
 ---------------
 
-.. automodule:: bitsharesapi
+.. automodule:: graphsdkapi
    :members:
    :undoc-members:
    :show-inheritance:

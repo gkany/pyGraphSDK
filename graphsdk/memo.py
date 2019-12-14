@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from graphenecommon.memo import Memo as GrapheneMemo
-from bitsharesbase.account import PrivateKey, PublicKey
+from graphsdkbase.account import PrivateKey, PublicKey
 
 from .account import Account
 from .instance import BlockchainInstance

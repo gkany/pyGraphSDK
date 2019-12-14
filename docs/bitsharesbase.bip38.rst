@@ -1,7 +1,7 @@
-bitsharesbase.bip38 module
+graphsdkbase.bip38 module
 ==========================
 
-.. automodule:: bitsharesbase.bip38
+.. automodule:: graphsdkbase.bip38
    :members:
    :undoc-members:
    :show-inheritance:

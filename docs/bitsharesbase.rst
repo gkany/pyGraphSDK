@@ -1,4 +1,4 @@
-bitsharesbase package
+graphsdkbase package
 =====================
 
 Submodules
@@ -6,22 +6,22 @@ Submodules
 
 .. toctree::
 
-   bitsharesbase.account
-   bitsharesbase.asset_permissions
-   bitsharesbase.bip38
-   bitsharesbase.chains
-   bitsharesbase.memo
-   bitsharesbase.objects
-   bitsharesbase.objecttypes
-   bitsharesbase.operationids
-   bitsharesbase.operations
-   bitsharesbase.signedtransactions
-   bitsharesbase.transactions
+   graphsdkbase.account
+   graphsdkbase.asset_permissions
+   graphsdkbase.bip38
+   graphsdkbase.chains
+   graphsdkbase.memo
+   graphsdkbase.objects
+   graphsdkbase.objecttypes
+   graphsdkbase.operationids
+   graphsdkbase.operations
+   graphsdkbase.signedtransactions
+   graphsdkbase.transactions
 
 Module contents
 ---------------
 
-.. automodule:: bitsharesbase
+.. automodule:: graphsdkbase
    :members:
    :undoc-members:
    :show-inheritance:

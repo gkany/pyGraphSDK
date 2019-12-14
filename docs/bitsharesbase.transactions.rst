@@ -1,7 +1,7 @@
-bitsharesbase.transactions module
+graphsdkbase.transactions module
 =================================
 
-.. automodule:: bitsharesbase.transactions
+.. automodule:: graphsdkbase.transactions
    :members:
    :undoc-members:
    :show-inheritance:

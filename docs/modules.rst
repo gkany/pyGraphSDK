@@ -5,5 +5,5 @@ python-bitshares
    :maxdepth: 6
 
    bitshares
-   bitsharesapi
-   bitsharesbase
+   graphsdkapi
+   graphsdkbase

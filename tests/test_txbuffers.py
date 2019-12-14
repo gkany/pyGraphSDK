@@ -1,5 +1,5 @@
 import unittest
-from bitsharesbase import operations
+from graphsdkbase import operations
 from .fixtures import fixture_data, bitshares
 
 

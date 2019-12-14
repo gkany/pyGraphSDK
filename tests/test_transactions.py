@@ -6,10 +6,10 @@ from pprint import pprint
 from binascii import hexlify
 
 from bitshares import BitShares
-from bitsharesbase import transactions, memo, account, operations, objects
-from bitsharesbase.objects import Operation
-from bitsharesbase.signedtransactions import Signed_Transaction
-from bitsharesbase.account import PrivateKey
+from graphsdkbase import transactions, memo, account, operations, objects
+from graphsdkbase.objects import Operation
+from graphsdkbase.signedtransactions import Signed_Transaction
+from graphsdkbase.account import PrivateKey
 from graphenebase.base58 import ripemd160
 
 from .fixtures import fixture_data, bitshares, wif

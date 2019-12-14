@@ -5,10 +5,10 @@ import random
 from pprint import pprint
 from bitshares import BitShares
 from bitshares.account import Account
-from bitsharesbase.operationids import getOperationNameForId
+from graphsdkbase.operationids import getOperationNameForId
 from bitshares.amount import Amount
-from bitsharesbase.account import PrivateKey
-from bitsharesbase.asset_permissions import todict
+from graphsdkbase.account import PrivateKey
+from graphsdkbase.asset_permissions import todict
 from bitshares.instance import set_shared_bitshares_instance
 from .fixtures import fixture_data, bitshares
 

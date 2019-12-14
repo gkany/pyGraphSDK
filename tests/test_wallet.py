@@ -3,7 +3,7 @@ import unittest
 from bitshares import storage
 from bitshares.wallet import Wallet
 from bitshares.exceptions import KeyNotFound
-from bitsharesbase.account import PrivateKey
+from graphsdkbase.account import PrivateKey
 from .fixtures import fixture_data
 
 

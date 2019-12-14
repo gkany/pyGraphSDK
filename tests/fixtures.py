@@ -11,7 +11,7 @@ from bitshares.asset import Asset
 from bitshares.account import Account
 from bitshares.proposal import Proposals, Proposal
 
-from bitsharesbase.operationids import operations
+from graphsdkbase.operationids import operations
 
 # default wifs key for testing
 wifs = [

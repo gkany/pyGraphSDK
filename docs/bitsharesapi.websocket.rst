@@ -1,7 +1,7 @@
-bitsharesapi.websocket module
+graphsdkapi.websocket module
 =============================
 
-.. automodule:: bitsharesapi.websocket
+.. automodule:: graphsdkapi.websocket
    :members:
    :undoc-members:
    :show-inheritance:

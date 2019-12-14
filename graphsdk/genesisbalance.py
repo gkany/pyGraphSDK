@@ -6,8 +6,8 @@ from graphenecommon.genesisbalance import (
     GenesisBalances as GrapheneGenesisBalances,
 )
 
-from bitsharesbase.account import Address, PublicKey
-from bitsharesbase import operations
+from graphsdkbase.account import Address, PublicKey
+from graphsdkbase import operations
 
 
 @BlockchainInstance.inject

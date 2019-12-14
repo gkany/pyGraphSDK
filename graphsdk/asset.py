@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 import json
 
-from bitsharesbase import operations
-from bitsharesbase.asset_permissions import (
+from graphsdkbase import operations
+from graphsdkbase.asset_permissions import (
     asset_permissions,
     force_flag,
     test_permissions,

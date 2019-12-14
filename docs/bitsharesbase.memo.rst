@@ -1,7 +1,7 @@
-bitsharesbase.memo module
+graphsdkbase.memo module
 =========================
 
-.. automodule:: bitsharesbase.memo
+.. automodule:: graphsdkbase.memo
    :members:
    :undoc-members:
    :show-inheritance:

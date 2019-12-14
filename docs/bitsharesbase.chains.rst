@@ -1,7 +1,7 @@
-bitsharesbase.chains module
+graphsdkbase.chains module
 ===========================
 
-.. automodule:: bitsharesbase.chains
+.. automodule:: graphsdkbase.chains
    :members:
    :undoc-members:
    :show-inheritance:

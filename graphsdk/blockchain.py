@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from .block import Block
 from .instance import BlockchainInstance
-from bitsharesbase import operationids
+from graphsdkbase import operationids
 from graphenecommon.blockchain import Blockchain as GrapheneBlockchain
 
 

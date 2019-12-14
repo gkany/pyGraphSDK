@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
 
-from bitsharesapi.websocket import BitSharesWebsocket
+from graphsdkapi.websocket import BitSharesWebsocket
 from events import Events
 
 from .account import AccountUpdate

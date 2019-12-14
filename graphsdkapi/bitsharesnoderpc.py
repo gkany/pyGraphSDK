@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import re
 
-from bitsharesbase.chains import known_chains
+from graphsdkbase.chains import known_chains
 from grapheneapi.api import Api as Original_Api
 
 from . import exceptions

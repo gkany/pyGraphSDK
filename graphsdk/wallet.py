@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from bitsharesbase.account import PrivateKey
+from graphsdkbase.account import PrivateKey
 from graphenecommon.wallet import Wallet as GrapheneWallet
 from graphenecommon.exceptions import (
     InvalidWifError,

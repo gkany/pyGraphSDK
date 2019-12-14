@@ -1,7 +1,7 @@
-bitsharesapi.exceptions module
+graphsdkapi.exceptions module
 ==============================
 
-.. automodule:: bitsharesapi.exceptions
+.. automodule:: graphsdkapi.exceptions
    :members:
    :undoc-members:
    :show-inheritance:

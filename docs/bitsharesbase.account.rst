@@ -1,7 +1,7 @@
-bitsharesbase.account module
+graphsdkbase.account module
 ============================
 
-.. automodule:: bitsharesbase.account
+.. automodule:: graphsdkbase.account
    :members:
    :undoc-members:
    :show-inheritance:

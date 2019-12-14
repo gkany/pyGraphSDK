@@ -156,13 +156,13 @@ _________
 
    bitshares
 
-bitsharesbase
+graphsdkbase
 _____________
 
 .. toctree::
    :maxdepth: 3
 
-   bitsharesbase
+   graphsdkbase
 
 Glossary
 ========

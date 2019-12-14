@@ -1,7 +1,7 @@
-bitsharesbase.asset\_permissions module
+graphsdkbase.asset\_permissions module
 =======================================
 
-.. automodule:: bitsharesbase.asset_permissions
+.. automodule:: graphsdkbase.asset_permissions
    :members:
    :undoc-members:
    :show-inheritance:
